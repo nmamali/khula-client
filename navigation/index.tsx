@@ -1,23 +1,25 @@
-/**
- * If you are not familiar with React Navigation, refer to the "Fundamentals" guide:
- * https://reactnavigation.org/docs/getting-started
- *
- */
-import { FontAwesome } from '@expo/vector-icons';
+
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { ColorSchemeName, Pressable } from 'react-native';
-
+import {ColorSchemeName, Text, View} from 'react-native';
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
-import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
+import HomeScreen from '../screens/HomeScreen';
+import FavouritesScreen from '../screens/FavouritesScreen';
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
+import HomeIcon from "../components/khula-icons/HomeIcon";
+import ChatIcon from "../components/khula-icons/ChatIcon";
+import HeartIcon from "../components/khula-icons/HeartIcon";
+import {StyleSheet} from "react-native";
+import {FAV_COUNTER} from "../graphql/cacheQueries";
+import {useQuery, useReactiveVar} from "@apollo/client";
+import {favCounterVar} from "../cache";
+import theme from "../assets/theme";
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
@@ -25,6 +27,7 @@ export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeNa
       linking={LinkingConfiguration}
       theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <RootNavigator />
+
     </NavigationContainer>
   );
 }
@@ -55,53 +58,79 @@ const BottomTab = createBottomTabNavigator<RootTabParamList>();
 
 function BottomTabNavigator() {
   const colorScheme = useColorScheme();
-
+  const favCounter = useReactiveVar(favCounterVar);
   return (
     <BottomTab.Navigator
-      initialRouteName="TabOne"
+      initialRouteName="Home"
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme].tint,
-      }}>
+          tabBarStyle: localStyles.tabContainer
+      }}
+    >
       <BottomTab.Screen
-        name="TabOne"
-        component={TabOneScreen}
-        options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('Modal')}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
-              })}>
-              <FontAwesome
-                name="info-circle"
-                size={25}
-                color={Colors[colorScheme].text}
-                style={{ marginRight: 15 }}
-              />
-            </Pressable>
-          ),
+        name="Home"
+        component={HomeScreen}
+        options={({ navigation }: RootTabScreenProps<'Home'>) => ({
+          title: 'Home',
+          headerTitle: "SCHOOLINK",
+          headerTitleStyle: {
+              color: "#38587D",
+              fontWeight: "bold",
+              fontSize:24
+            },
+          tabBarIcon: ({ color }) => <HomeIcon fontSize={30} fill={color} style={{flex: 1, height: 23, width: 23}}/>,
         })}
       />
       <BottomTab.Screen
-        name="TabTwo"
-        component={TabTwoScreen}
+        name="Favourites"
+        component={FavouritesScreen}
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Favourites',
+          tabBarIcon: ({ color }) => <View>
+              {favCounter.length>0 && <View style={localStyles.counterContainer}>
+                  <Text style={{color: theme.white}}>{favCounter.length}</Text>
+              </View>
+              }
+              <HeartIcon fontSize={30} fill={color} style={{flex: 1, height: 23, width: 23}}/>
+
+
+          </View>
+
         }}
       />
+
+        <BottomTab.Screen
+            name="Chat"
+            component={FavouritesScreen}
+            options={{
+                title: 'Chat',
+                tabBarIcon: ({ color }) => <ChatIcon fontSize={30} fill={color} style={{flex: 1, height: 23, width: 23}}/>,
+            }}
+        />
     </BottomTab.Navigator>
   );
 }
 
-/**
- * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
- */
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
-}
+const localStyles = StyleSheet.create({
+    tabContainer: {
+        backgroundColor: "#fff",
+        paddingTop: 10,
+        position: "absolute",
+        shadowOpacity: 0.2,
+        shadowOffset: { width: 1, height: 1 },
+        shadowRadius: 12,
+        elevation: 10,
+        zIndex: 8,
+        bottom: 30,
+    },
+    counterContainer:{
+        left:10,
+        top:13,
+        backgroundColor:"red",
+        borderRadius:14,
+        alignItems:"center",
+        width:17,
+        height:17,
+        zIndex: 1
+    }
+});
