@@ -9,6 +9,7 @@ import SchoolItemCard from "../components/SchoolItemCard";
 import theme from "../assets/theme";
 import {SchoolInterface} from "../typeDefs/types";
 import {handleError} from "../utils";
+import {favCounterVar} from "../cache";
 
 export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const [getSchools, { error: schoolError, data: schoolsData }] = useLazyQuery(SCHOOLS);
